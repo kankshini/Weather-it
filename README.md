@@ -1,4 +1,4 @@
-# 🌤 Weather App
+# 🌤 Weather-it App
 
 A responsive weather application built using **HTML, CSS, and JavaScript** that fetches real-time weather data using WeatherAPI.
 
@@ -18,6 +18,7 @@ A responsive weather application built using **HTML, CSS, and JavaScript** that 
 
 ## 🔗 Live Demo
 https://kankshini.github.io/Weather-it/
+
 
 
 
