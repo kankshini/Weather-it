@@ -6,11 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-:root {
-  --overlay: rgba(0,0,0,0.45);
-  --text: #fff;
-}
-
 * {
   box-sizing: border-box;
   font-family: Arial, sans-serif;
@@ -25,16 +20,15 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: var(--text);
-  transition: background-image 0.6s ease-in-out;
+  color: white;
+  transition: background-image 0.5s ease;
 }
 
-/* dark overlay for readability */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: var(--overlay);
+  background: rgba(0,0,0,0.45);
   z-index: -1;
 }
 
@@ -42,7 +36,7 @@ body::before {
   width: 95%;
   max-width: 420px;
   background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(15px);
   padding: 20px;
   border-radius: 18px;
   text-align: center;
@@ -74,8 +68,12 @@ button {
   border: none;
   cursor: pointer;
   background: #ff9800;
-  color: #000;
+  color: black;
   font-weight: bold;
+}
+
+button:hover {
+  opacity: 0.9;
 }
 
 .actions button {
@@ -104,6 +102,7 @@ button {
 
 .error {
   color: #ffb3b3;
+  margin-top: 10px;
 }
 </style>
 </head>
@@ -126,10 +125,10 @@ button {
 </div>
 
 <script>
-const API_KEY = "YOUR_API_KEY_HERE";
+const API_KEY = "b28d989487c24cf7a0c121414260201";
 
-// 🎭 MEME / GIF BACKGROUNDS
-const memeBackgrounds = {
+// meme / gif backgrounds
+const backgrounds = {
   sunny: "https://media.giphy.com/media/3o6Zt481isNVuQI1l6/giphy.gif",
   cloudy: "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif",
   rain: "https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif",
@@ -148,15 +147,22 @@ function search() {
 }
 
 function fetchWeather(query) {
-  document.getElementById("output").innerHTML = "⏳ Loading vibes...";
+  document.getElementById("output").innerHTML = "⏳ Loading weather vibes...";
+
   fetch(`https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${query}&days=5`)
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) throw new Error("API error");
+      return res.json();
+    })
     .then(data => renderWeather(data))
-    .catch(() => showError("City not found"));
+    .catch(err => {
+      console.error(err);
+      showError("City not found");
+    });
 }
 
 function renderWeather(data) {
-  setMemeBackground(data.current.condition.text);
+  setBackground(data.current.condition.text);
 
   let html = `
     <div class="weather">
@@ -164,16 +170,17 @@ function renderWeather(data) {
       <img src="${data.current.condition.icon}">
       <p>🌡 ${data.current.temp_c} °C</p>
       <p>${data.current.condition.text}</p>
+      <p>💧 ${data.current.humidity}% | 🌬 ${data.current.wind_kph} km/h</p>
     </div>
     <div class="forecast">
   `;
 
-  data.forecast.forecastday.forEach(d => {
+  data.forecast.forecastday.forEach(day => {
     html += `
       <div class="day">
-        <p>${d.date}</p>
-        <img src="${d.day.condition.icon}">
-        <p>${d.day.avgtemp_c} °C</p>
+        <p>${day.date}</p>
+        <img src="${day.day.condition.icon}">
+        <p>${day.day.avgtemp_c} °C</p>
       </div>
     `;
   });
@@ -182,26 +189,28 @@ function renderWeather(data) {
   document.getElementById("output").innerHTML = html;
 }
 
-function setMemeBackground(condition) {
+function setBackground(condition) {
   condition = condition.toLowerCase();
 
   if (condition.includes("sun") || condition.includes("clear")) {
-    document.body.style.backgroundImage = `url(${memeBackgrounds.sunny})`;
+    document.body.style.backgroundImage = `url(${backgrounds.sunny})`;
   } else if (condition.includes("cloud")) {
-    document.body.style.backgroundImage = `url(${memeBackgrounds.cloudy})`;
+    document.body.style.backgroundImage = `url(${backgrounds.cloudy})`;
   } else if (condition.includes("rain")) {
-    document.body.style.backgroundImage = `url(${memeBackgrounds.rain})`;
+    document.body.style.backgroundImage = `url(${backgrounds.rain})`;
   } else if (condition.includes("snow")) {
-    document.body.style.backgroundImage = `url(${memeBackgrounds.snow})`;
+    document.body.style.backgroundImage = `url(${backgrounds.snow})`;
   } else {
-    document.body.style.backgroundImage = `url(${memeBackgrounds.default})`;
+    document.body.style.backgroundImage = `url(${backgrounds.default})`;
   }
 }
 
 function getLocation() {
   navigator.geolocation.getCurrentPosition(
-    pos => fetchWeather(`${pos.coords.latitude},${pos.coords.longitude}`),
-    () => showError("Location denied")
+    pos => {
+      fetchWeather(`${pos.coords.latitude},${pos.coords.longitude}`);
+    },
+    () => showError("Location access denied")
   );
 }
 
