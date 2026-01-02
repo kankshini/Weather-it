@@ -7,14 +7,7 @@
 
 <style>
 :root {
-  --bg: linear-gradient(135deg, #74ebd5, #acb6e5);
-  --card: rgba(255,255,255,0.25);
-  --text: #000;
-}
-
-.dark {
-  --bg: linear-gradient(135deg, #141e30, #243b55);
-  --card: rgba(0,0,0,0.4);
+  --overlay: rgba(0,0,0,0.45);
   --text: #fff;
 }
 
@@ -26,23 +19,34 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   display: flex;
   justify-content: center;
   align-items: center;
   color: var(--text);
-  transition: 0.3s;
+  transition: background-image 0.6s ease-in-out;
+}
+
+/* dark overlay for readability */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  z-index: -1;
 }
 
 .container {
   width: 95%;
   max-width: 420px;
-  background: var(--card);
-  backdrop-filter: blur(15px);
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(16px);
   padding: 20px;
-  border-radius: 15px;
+  border-radius: 18px;
   text-align: center;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.4);
 }
 
 h1 {
@@ -59,22 +63,19 @@ h1 {
 input {
   flex: 1;
   padding: 10px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: none;
   outline: none;
 }
 
 button {
   padding: 10px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: none;
   cursor: pointer;
-  background: #4a90e2;
-  color: white;
-}
-
-button:hover {
-  opacity: 0.9;
+  background: #ff9800;
+  color: #000;
+  font-weight: bold;
 }
 
 .actions button {
@@ -83,11 +84,7 @@ button:hover {
 }
 
 .weather img {
-  width: 64px;
-}
-
-.spinner {
-  margin: 20px 0;
+  width: 70px;
 }
 
 .forecast {
@@ -99,24 +96,14 @@ button:hover {
 
 .day {
   min-width: 90px;
-  background: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.25);
   padding: 8px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 14px;
-  transition: transform 0.2s;
-}
-
-.day:hover {
-  transform: translateY(-4px);
-}
-
-.dark .day {
-  background: rgba(0,0,0,0.3);
 }
 
 .error {
-  margin-top: 10px;
-  color: red;
+  color: #ffb3b3;
 }
 </style>
 </head>
@@ -127,46 +114,32 @@ button:hover {
   <h1>🌤 Weather-it</h1>
 
   <div class="search">
-    <input id="city" placeholder="Enter city name" />
+    <input id="city" placeholder="Enter city name">
     <button onclick="search()">🔍</button>
   </div>
 
   <div class="actions">
     <button onclick="getLocation()">📍 Use My Location</button>
-    <button onclick="toggleMode()">🌙 Toggle Mode</button>
-    <button onclick="toggleUnit()">🌡 °C / °F</button>
   </div>
 
   <div id="output"></div>
 </div>
 
 <script>
-// API key restricted at provider level (frontend demo project)
 const API_KEY = "YOUR_API_KEY_HERE";
 
-let useCelsius = true;
+// 🎭 MEME / GIF BACKGROUNDS
+const memeBackgrounds = {
+  sunny: "https://media.giphy.com/media/3o6Zt481isNVuQI1l6/giphy.gif",
+  cloudy: "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif",
+  rain: "https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif",
+  snow: "https://media.giphy.com/media/3ohhwfAa9rbXaZe86c/giphy.gif",
+  default: "https://media.giphy.com/media/xT0xeJpnrWC4XWblEk/giphy.gif"
+};
 
 document.getElementById("city").addEventListener("keypress", e => {
   if (e.key === "Enter") search();
 });
-
-function toggleMode() {
-  document.body.classList.toggle("dark");
-}
-
-function toggleUnit() {
-  useCelsius = !useCelsius;
-}
-
-function showLoader() {
-  document.getElementById("output").innerHTML =
-    '<div class="spinner">⏳ Loading...</div>';
-}
-
-function showError(msg) {
-  document.getElementById("output").innerHTML =
-    `<p class="error">${msg}</p>`;
-}
 
 function search() {
   const city = document.getElementById("city").value.trim();
@@ -175,27 +148,22 @@ function search() {
 }
 
 function fetchWeather(query) {
-  showLoader();
-
-  fetch(`https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${query}&days=7`)
-    .then(res => {
-      if (!res.ok) throw new Error();
-      return res.json();
-    })
+  document.getElementById("output").innerHTML = "⏳ Loading vibes...";
+  fetch(`https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${query}&days=5`)
+    .then(res => res.json())
     .then(data => renderWeather(data))
-    .catch(() => showError("City not found or network error"));
+    .catch(() => showError("City not found"));
 }
 
 function renderWeather(data) {
-  const temp = useCelsius ? data.current.temp_c + " °C" : data.current.temp_f + " °F";
+  setMemeBackground(data.current.condition.text);
 
   let html = `
     <div class="weather">
       <h2>${data.location.name}, ${data.location.country}</h2>
       <img src="${data.current.condition.icon}">
-      <p>🌡 ${temp}</p>
+      <p>🌡 ${data.current.temp_c} °C</p>
       <p>${data.current.condition.text}</p>
-      <p>💧 ${data.current.humidity}% | 🌬 ${data.current.wind_kph} km/h</p>
     </div>
     <div class="forecast">
   `;
@@ -205,7 +173,7 @@ function renderWeather(data) {
       <div class="day">
         <p>${d.date}</p>
         <img src="${d.day.condition.icon}">
-        <p>${useCelsius ? d.day.avgtemp_c + " °C" : d.day.avgtemp_f + " °F"}</p>
+        <p>${d.day.avgtemp_c} °C</p>
       </div>
     `;
   });
@@ -214,11 +182,32 @@ function renderWeather(data) {
   document.getElementById("output").innerHTML = html;
 }
 
+function setMemeBackground(condition) {
+  condition = condition.toLowerCase();
+
+  if (condition.includes("sun") || condition.includes("clear")) {
+    document.body.style.backgroundImage = `url(${memeBackgrounds.sunny})`;
+  } else if (condition.includes("cloud")) {
+    document.body.style.backgroundImage = `url(${memeBackgrounds.cloudy})`;
+  } else if (condition.includes("rain")) {
+    document.body.style.backgroundImage = `url(${memeBackgrounds.rain})`;
+  } else if (condition.includes("snow")) {
+    document.body.style.backgroundImage = `url(${memeBackgrounds.snow})`;
+  } else {
+    document.body.style.backgroundImage = `url(${memeBackgrounds.default})`;
+  }
+}
+
 function getLocation() {
   navigator.geolocation.getCurrentPosition(
     pos => fetchWeather(`${pos.coords.latitude},${pos.coords.longitude}`),
-    () => showError("Location access denied")
+    () => showError("Location denied")
   );
+}
+
+function showError(msg) {
+  document.getElementById("output").innerHTML =
+    `<p class="error">${msg}</p>`;
 }
 </script>
 
