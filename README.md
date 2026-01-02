@@ -16,7 +16,8 @@ A responsive weather application built using **HTML, CSS, and JavaScript** that 
 - JavaScript
 - WeatherAPI
 
-## 📸 Preview
-![Weather App Screenshot](screenshot.png)
+## 🔗 Live Demo
+https://kankshini.github.io/weather-it/
+
 
 
