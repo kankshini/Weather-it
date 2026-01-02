@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Weather App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+  --bg: linear-gradient(135deg, #74ebd5, #acb6e5);
+  --card: rgba(255,255,255,0.25);
+  --text: #000;
+}
+
+.dark {
+  --bg: linear-gradient(135deg, #141e30, #243b55);
+  --card: rgba(0,0,0,0.4);
+  --text: #fff;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text);
+  transition: 0.4s;
+}
+
+.container {
+  width: 95%;
+  max-width: 400px;
+  background: var(--card);
+  backdrop-filter: blur(15px);
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  text-align: center;
+}
+
+h1 {
+  margin-bottom: 15px;
+}
+
+.search {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+}
+
+button {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: #4a90e2;
+  color: #fff;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.toggle {
+  margin: 10px 0;
+  background: transparent;
+  border: 1px solid #fff;
+}
+
+.weather img {
+  width: 64px;
+}
+
+.forecast {
+  display: flex;
+  overflow-x: auto;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.day {
+  min-width: 90px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 10px;
+  padding: 8px;
+  font-size: 14px;
+}
+
+.dark .day {
+  background: rgba(0,0,0,0.3);
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>🌤 Weather App</h1>
+
+  <div class="search">
+    <input type="text" id="city" placeholder="Enter city">
+    <button onclick="getWeather()">🔍</button>
+  </div>
+
+  <button class="toggle" onclick="getLocation()">📍 Use My Location</button>
+  <button class="toggle" onclick="toggleMode()">🌙 Toggle Mode</button>
+
+  <div class="weather" id="weather"></div>
+  <div class="forecast" id="forecast"></div>
+</div>
+
+<script>
+const API_KEY = "b28d989487c24cf7a0c121414260201";
+
+function toggleMode() {
+  document.body.classList.toggle("dark");
+}
+
+function getWeather(cityName) {
+  const city = cityName || document.getElementById("city").value;
+  if (!city) return;
+
+  fetch(`http://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${city}&days=7&aqi=yes`)
+    .then(res => res.json())
+    .then(data => displayWeather(data))
+    .catch(() => alert("City not found"));
+}
+
+function displayWeather(data) {
+  document.getElementById("weather").innerHTML = `
+    <h2>${data.location.name}, ${data.location.country}</h2>
+    <img src="${data.current.condition.icon}">
+    <p>🌡 ${data.current.temp_c} °C</p>
+    <p>${data.current.condition.text}</p>
+    <p>💧 Humidity: ${data.current.humidity}%</p>
+    <p>🌬 Wind: ${data.current.wind_kph} km/h</p>
+  `;
+
+  let forecastHTML = "";
+  data.forecast.forecastday.forEach(day => {
+    forecastHTML += `
+      <div class="day">
+        <p>${day.date}</p>
+        <img src="${day.day.condition.icon}">
+        <p>${day.day.avgtemp_c}°C</p>
+      </div>
+    `;
+  });
+  document.getElementById("forecast").innerHTML = forecastHTML;
+}
+
+function getLocation() {
+  navigator.geolocation.getCurrentPosition(pos => {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+    fetch(`http://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${lat},${lon}&days=7`)
+      .then(res => res.json())
+      .then(data => displayWeather(data));
+  });
+}
+</script>
+
+</body>
+</html>
