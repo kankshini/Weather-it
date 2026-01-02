@@ -6,75 +6,167 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-* { box-sizing: border-box; font-family: Arial, sans-serif; }
+:root {
+  --bg: linear-gradient(135deg, #74ebd5, #acb6e5);
+  --card: rgba(255,255,255,0.25);
+  --text: #000;
+}
+
+.dark {
+  --bg: linear-gradient(135deg, #141e30, #243b55);
+  --card: rgba(0,0,0,0.4);
+  --text: #fff;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  background: var(--bg);
   display: flex;
   justify-content: center;
   align-items: center;
-  color: white;
+  color: var(--text);
+  transition: 0.3s;
 }
 
 .container {
   width: 95%;
   max-width: 420px;
-  background: rgba(255,255,255,0.15);
+  background: var(--card);
   backdrop-filter: blur(15px);
   padding: 20px;
-  border-radius: 18px;
+  border-radius: 15px;
   text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+h1 {
+  margin-bottom: 15px;
+  letter-spacing: 1px;
 }
 
 .search {
   display: flex;
   gap: 8px;
+  margin-bottom: 10px;
 }
 
 input {
   flex: 1;
   padding: 10px;
-  border-radius: 10px;
+  border-radius: 8px;
   border: none;
+  outline: none;
 }
 
 button {
   padding: 10px;
-  border-radius: 10px;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
-  background: #ff9800;
-  color: black;
-  font-weight: bold;
+  background: #4a90e2;
+  color: white;
 }
 
-.weather img { width: 70px; }
+button:hover {
+  opacity: 0.9;
+}
 
-.error { color: #ffb3b3; margin-top: 10px; }
+.actions button {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.weather img {
+  width: 64px;
+}
+
+.spinner {
+  margin: 20px 0;
+}
+
+.forecast {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  margin-top: 15px;
+}
+
+.day {
+  min-width: 90px;
+  background: rgba(255,255,255,0.3);
+  padding: 8px;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: transform 0.2s;
+}
+
+.day:hover {
+  transform: translateY(-4px);
+}
+
+.dark .day {
+  background: rgba(0,0,0,0.3);
+}
+
+.error {
+  margin-top: 10px;
+  color: red;
+}
 </style>
 </head>
 
 <body>
 
 <div class="container">
-  <h2>Weather-it</h2>
+  <h1>🌤 Weather-it</h1>
 
   <div class="search">
-    <input id="city" placeholder="Enter city name (e.g. Mumbai)">
+    <input id="city" placeholder="Enter city name" />
     <button onclick="search()">🔍</button>
+  </div>
+
+  <div class="actions">
+    <button onclick="getLocation()">📍 Use My Location</button>
+    <button onclick="toggleMode()">🌙 Toggle Mode</button>
+    <button onclick="toggleUnit()">🌡 °C / °F</button>
   </div>
 
   <div id="output"></div>
 </div>
 
 <script>
-const API_KEY = "b28d989487c24cf7a0c121414260201";
+// API key restricted at provider level (frontend demo project)
+const API_KEY = "YOUR_API_KEY_HERE";
+
+let useCelsius = true;
 
 document.getElementById("city").addEventListener("keypress", e => {
   if (e.key === "Enter") search();
 });
+
+function toggleMode() {
+  document.body.classList.toggle("dark");
+}
+
+function toggleUnit() {
+  useCelsius = !useCelsius;
+}
+
+function showLoader() {
+  document.getElementById("output").innerHTML =
+    '<div class="spinner">⏳ Loading...</div>';
+}
+
+function showError(msg) {
+  document.getElementById("output").innerHTML =
+    `<p class="error">${msg}</p>`;
+}
 
 function search() {
   const city = document.getElementById("city").value.trim();
@@ -83,39 +175,50 @@ function search() {
 }
 
 function fetchWeather(query) {
-  document.getElementById("output").innerHTML = "⏳ Fetching weather...";
+  showLoader();
 
-  fetch(`https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${query}`)
-    .then(res => res.json())
-    .then(data => {
-      // 🔥 THIS IS THE KEY FIX
-      if (data.error) {
-        showError(data.error.message);
-        return;
-      }
-      renderWeather(data);
+  fetch(`https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${query}&days=7`)
+    .then(res => {
+      if (!res.ok) throw new Error();
+      return res.json();
     })
-    .catch(err => {
-      console.error(err);
-      showError("Network error");
-    });
+    .then(data => renderWeather(data))
+    .catch(() => showError("City not found or network error"));
 }
 
 function renderWeather(data) {
-  document.getElementById("output").innerHTML = `
+  const temp = useCelsius ? data.current.temp_c + " °C" : data.current.temp_f + " °F";
+
+  let html = `
     <div class="weather">
-      <h3>${data.location.name}, ${data.location.country}</h3>
+      <h2>${data.location.name}, ${data.location.country}</h2>
       <img src="${data.current.condition.icon}">
-      <p>🌡 ${data.current.temp_c} °C</p>
+      <p>🌡 ${temp}</p>
       <p>${data.current.condition.text}</p>
       <p>💧 ${data.current.humidity}% | 🌬 ${data.current.wind_kph} km/h</p>
     </div>
+    <div class="forecast">
   `;
+
+  data.forecast.forecastday.forEach(d => {
+    html += `
+      <div class="day">
+        <p>${d.date}</p>
+        <img src="${d.day.condition.icon}">
+        <p>${useCelsius ? d.day.avgtemp_c + " °C" : d.day.avgtemp_f + " °F"}</p>
+      </div>
+    `;
+  });
+
+  html += "</div>";
+  document.getElementById("output").innerHTML = html;
 }
 
-function showError(msg) {
-  document.getElementById("output").innerHTML =
-    `<p class="error">❌ ${msg}</p>`;
+function getLocation() {
+  navigator.geolocation.getCurrentPosition(
+    pos => fetchWeather(`${pos.coords.latitude},${pos.coords.longitude}`),
+    () => showError("Location access denied")
+  );
 }
 </script>
 
