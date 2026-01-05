@@ -31,7 +31,6 @@ body {
   justify-content: center;
   align-items: center;
   color: var(--text);
-  transition: 0.3s;
 }
 
 .container {
@@ -86,10 +85,6 @@ button:hover {
   width: 64px;
 }
 
-.spinner {
-  margin: 20px 0;
-}
-
 .forecast {
   display: flex;
   gap: 10px;
@@ -103,15 +98,6 @@ button:hover {
   padding: 8px;
   border-radius: 10px;
   font-size: 14px;
-  transition: transform 0.2s;
-}
-
-.day:hover {
-  transform: translateY(-4px);
-}
-
-.dark .day {
-  background: rgba(0,0,0,0.3);
 }
 
 .error {
@@ -127,7 +113,7 @@ button:hover {
   <h1>🌤 Weather-it</h1>
 
   <div class="search">
-    <input id="city" placeholder="Enter city name" />
+    <input id="city" placeholder="Enter city name (e.g. Mumbai)">
     <button onclick="search()">🔍</button>
   </div>
 
@@ -141,8 +127,8 @@ button:hover {
 </div>
 
 <script>
-// API key restricted at provider level (frontend demo project)
-const API_KEY = "YOUR_API_KEY_HERE";
+// ✅ REAL API KEY (replace if you generate a new one)
+const API_KEY = "b28d989487c24cf7a0c121414260201";
 
 let useCelsius = true;
 
@@ -158,14 +144,9 @@ function toggleUnit() {
   useCelsius = !useCelsius;
 }
 
-function showLoader() {
-  document.getElementById("output").innerHTML =
-    '<div class="spinner">⏳ Loading...</div>';
-}
-
 function showError(msg) {
   document.getElementById("output").innerHTML =
-    `<p class="error">${msg}</p>`;
+    `<p class="error">❌ ${msg}</p>`;
 }
 
 function search() {
@@ -175,19 +156,25 @@ function search() {
 }
 
 function fetchWeather(query) {
-  showLoader();
+  document.getElementById("output").innerHTML = "⏳ Loading weather...";
 
   fetch(`https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${query}&days=7`)
-    .then(res => {
-      if (!res.ok) throw new Error();
-      return res.json();
+    .then(res => res.json())
+    .then(data => {
+      // 🔥 IMPORTANT FIX
+      if (data.error) {
+        showError(data.error.message);
+        return;
+      }
+      renderWeather(data);
     })
-    .then(data => renderWeather(data))
-    .catch(() => showError("City not found or network error"));
+    .catch(() => showError("Network error"));
 }
 
 function renderWeather(data) {
-  const temp = useCelsius ? data.current.temp_c + " °C" : data.current.temp_f + " °F";
+  const temp = useCelsius
+    ? `${data.current.temp_c} °C`
+    : `${data.current.temp_f} °F`;
 
   let html = `
     <div class="weather">
