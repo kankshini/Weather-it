@@ -4,25 +4,22 @@
 <meta charset="UTF-8">
 <title>Weather-it</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
 :root {
-  --bg: linear-gradient(135deg, #74ebd5, #acb6e5);
+  --bg: linear-gradient(135deg, #FFD1DC, #FF9AA2);
   --card: rgba(255,255,255,0.25);
-  --text: #000;
+  --text: #333;
+  font-size: 18px;
 }
-
 .dark {
   --bg: linear-gradient(135deg, #141e30, #243b55);
   --card: rgba(0,0,0,0.4);
   --text: #fff;
 }
-
 * {
   box-sizing: border-box;
-  font-family: Arial, sans-serif;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
 }
-
 body {
   margin: 0;
   min-height: 100vh;
@@ -31,183 +28,19 @@ body {
   justify-content: center;
   align-items: center;
   color: var(--text);
+  font-family: 'Comic Sans MS', sans-serif;
 }
-
 .container {
-  width: 95%;
+  width: 98%;
   max-width: 420px;
   background: var(--card);
-  backdrop-filter: blur(15px);
-  padding: 20px;
-  border-radius: 15px;
+  backdrop-filter: blur(20px);
+  padding: 25px;
+  border-radius: 25px;
   text-align: center;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.2);
 }
-
-h1 {
-  margin-bottom: 15px;
-  letter-spacing: 1px;
-}
-
 .search {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-input {
-  flex: 1;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-}
-
-button {
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  background: #4a90e2;
-  color: white;
-}
-
-button:hover {
-  opacity: 0.9;
-}
-
-.actions button {
-  width: 100%;
-  margin-top: 6px;
-}
-
-.weather img {
-  width: 64px;
-}
-
-.forecast {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  margin-top: 15px;
-}
-
-.day {
-  min-width: 90px;
-  background: rgba(255,255,255,0.3);
-  padding: 8px;
-  border-radius: 10px;
-  font-size: 14px;
-}
-
-.error {
-  margin-top: 10px;
-  color: red;
-}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-  <h1>🌤 Weather-it</h1>
-
-  <div class="search">
-    <input id="city" placeholder="Enter city name (e.g. Mumbai)">
-    <button onclick="search()">🔍</button>
-  </div>
-
-  <div class="actions">
-    <button onclick="getLocation()">📍 Use My Location</button>
-    <button onclick="toggleMode()">🌙 Toggle Mode</button>
-    <button onclick="toggleUnit()">🌡 °C / °F</button>
-  </div>
-
-  <div id="output"></div>
-</div>
-
-<script>
-// ✅ REAL API KEY (replace if you generate a new one)
-const API_KEY = "b28d989487c24cf7a0c121414260201";
-
-let useCelsius = true;
-
-document.getElementById("city").addEventListener("keypress", e => {
-  if (e.key === "Enter") search();
-});
-
-function toggleMode() {
-  document.body.classList.toggle("dark");
-}
-
-function toggleUnit() {
-  useCelsius = !useCelsius;
-}
-
-function showError(msg) {
-  document.getElementById("output").innerHTML =
-    `<p class="error">❌ ${msg}</p>`;
-}
-
-function search() {
-  const city = document.getElementById("city").value.trim();
-  if (!city) return;
-  fetchWeather(city);
-}
-
-function fetchWeather(query) {
-  document.getElementById("output").innerHTML = "⏳ Loading weather...";
-
-  fetch(`https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${query}&days=7`)
-    .then(res => res.json())
-    .then(data => {
-      // 🔥 IMPORTANT FIX
-      if (data.error) {
-        showError(data.error.message);
-        return;
-      }
-      renderWeather(data);
-    })
-    .catch(() => showError("Network error"));
-}
-
-function renderWeather(data) {
-  const temp = useCelsius
-    ? `${data.current.temp_c} °C`
-    : `${data.current.temp_f} °F`;
-
-  let html = `
-    <div class="weather">
-      <h2>${data.location.name}, ${data.location.country}</h2>
-      <img src="${data.current.condition.icon}">
-      <p>🌡 ${temp}</p>
-      <p>${data.current.condition.text}</p>
-      <p>💧 ${data.current.humidity}% | 🌬 ${data.current.wind_kph} km/h</p>
-    </div>
-    <div class="forecast">
-  `;
-
-  data.forecast.forecastday.forEach(d => {
-    html += `
-      <div class="day">
-        <p>${d.date}</p>
-        <img src="${d.day.condition.icon}">
-        <p>${useCelsius ? d.day.avgtemp_c + " °C" : d.day.avgtemp_f + " °F"}</p>
-      </div>
-    `;
-  });
-
-  html += "</div>";
-  document.getElementById("output").innerHTML = html;
-}
-
-function getLocation() {
-  navigator.geolocation.getCurrentPosition(
-    pos => fetchWeather(`${pos.coords.latitude},${pos.coords.longitude}`),
-    () => showError("Location access denied")
-  );
-}
-</script>
-
-</body>
-</html>
+    color:aliceblue
+ }etc..etc later
+ let retry="{"complete":"Complete itself replacement overrides"}
