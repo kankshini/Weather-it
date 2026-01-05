@@ -8,13 +8,6 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
-:root {
-  --pink: #ffd6e8;
-  --blue: #dbeafe;
-  --card: rgba(255,255,255,0.65);
-  --text: #333;
-}
-
 * {
   box-sizing: border-box;
   font-family: 'Poppins', sans-serif;
@@ -23,55 +16,96 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(135deg, #ffd6e8, #dbeafe);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  overflow: hidden;
+  background: linear-gradient(#aee1f9, #fefefe);
 }
 
-/* floating anime clouds */
-body::before {
-  content: "☁️ ☁️ ☁️";
+/* 🌌 BACKGROUND LAYERS */
+.background {
   position: fixed;
-  top: 10%;
-  left: 0;
-  width: 100%;
-  font-size: 3rem;
-  opacity: 0.25;
-  animation: float 20s linear infinite;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
 }
 
-@keyframes float {
-  from { transform: translateX(-20%); }
-  to { transform: translateX(120%); }
+/* ☀️ SUNNY */
+.sun {
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, #ffd93d, #ffb703);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: rise 3s ease forwards, glow 2s infinite alternate;
 }
 
-.card {
+@keyframes rise {
+  from { top: 100%; }
+  to { top: 60%; }
+}
+
+@keyframes glow {
+  from { box-shadow: 0 0 30px #ffd93d; }
+  to { box-shadow: 0 0 70px #ffd93d; }
+}
+
+/* 🌧️ RAIN */
+.rain {
+  position: absolute;
+  inset: 0;
+}
+
+.drop {
+  position: absolute;
+  width: 2px;
+  height: 20px;
+  background: rgba(255,255,255,0.6);
+  animation: fall 1s linear infinite;
+}
+
+@keyframes fall {
+  from { transform: translateY(-100px); }
+  to { transform: translateY(110vh); }
+}
+
+/* ❄️ SNOW */
+.snowflake {
+  position: absolute;
+  color: white;
+  font-size: 1.2rem;
+  animation: snowFall linear infinite;
+}
+
+@keyframes snowFall {
+  from { transform: translateY(-10%); }
+  to { transform: translateY(110vh); }
+}
+
+/* 🧊 UI CARD */
+.container {
+  position: relative;
+  z-index: 2;
   width: 90%;
   max-width: 380px;
-  background: var(--card);
+  margin: auto;
+  margin-top: 10vh;
+  background: rgba(255,255,255,0.6);
   backdrop-filter: blur(16px);
   padding: 24px;
   border-radius: 22px;
-  box-shadow: 0 25px 50px rgba(0,0,0,0.15);
   text-align: center;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.2);
 }
 
 h1 {
-  margin-bottom: 12px;
-  font-weight: 600;
-}
-
-.subtitle {
-  font-size: 0.9rem;
-  opacity: 0.7;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .search {
   display: flex;
   gap: 8px;
-  margin-bottom: 12px;
 }
 
 input {
@@ -89,42 +123,29 @@ button {
   cursor: pointer;
   background: #60a5fa;
   color: white;
-  font-weight: 500;
-}
-
-button:hover {
-  opacity: 0.9;
 }
 
 .weather img {
   width: 80px;
 }
 
-.mood {
-  margin-top: 10px;
-  font-size: 0.95rem;
-}
-
-.outfit, .activity {
-  margin-top: 8px;
-  font-size: 0.9rem;
-}
-
 .error {
-  color: #e11d48;
-  margin-top: 10px;
+  color: #dc2626;
 }
 </style>
 </head>
 
 <body>
 
-<div class="card">
+<!-- 🌌 Dynamic Background -->
+<div class="background" id="bg"></div>
+
+<!-- 🧊 UI -->
+<div class="container">
   <h1>🌸 Weather-it</h1>
-  <div class="subtitle">anime vibes only ✨</div>
 
   <div class="search">
-    <input id="city" placeholder="Enter city (Tokyo 👀)">
+    <input id="city" placeholder="Enter city (Mumbai)">
     <button onclick="search()">🔍</button>
   </div>
 
@@ -133,6 +154,7 @@ button:hover {
 
 <script>
 const API_KEY = "b28d989487c24cf7a0c121414260201";
+const bg = document.getElementById("bg");
 
 document.getElementById("city").addEventListener("keypress", e => {
   if (e.key === "Enter") search();
@@ -141,11 +163,9 @@ document.getElementById("city").addEventListener("keypress", e => {
 function search() {
   const city = document.getElementById("city").value.trim();
   if (!city) return;
-  fetchWeather(city);
-}
 
-function fetchWeather(city) {
-  document.getElementById("output").innerHTML = "⏳ loading anime weather...";
+  document.getElementById("output").innerHTML = "⏳ loading...";
+  bg.innerHTML = "";
 
   fetch(`https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${city}`)
     .then(res => res.json())
@@ -155,50 +175,49 @@ function fetchWeather(city) {
         return;
       }
       renderWeather(data);
+      setAnimation(data.current.condition.text.toLowerCase());
     })
-    .catch(() => showError("network senpai betrayed us 💔"));
+    .catch(() => showError("Network error"));
 }
 
 function renderWeather(data) {
-  const temp = data.current.temp_c;
-  const condition = data.current.condition.text.toLowerCase();
-
-  const mood = getMood(condition);
-  const outfit = getOutfit(temp, condition);
-  const activity = getActivity(condition);
-
   document.getElementById("output").innerHTML = `
     <div class="weather">
       <h2>${data.location.name}</h2>
       <img src="${data.current.condition.icon}">
-      <p>🌡 ${temp} °C</p>
+      <p>🌡 ${data.current.temp_c} °C</p>
       <p>${data.current.condition.text}</p>
     </div>
-
-    <div class="mood">😄 <b>Mood:</b> ${mood}</div>
-    <div class="outfit">👕 <b>Outfit:</b> ${outfit}</div>
-    <div class="activity">🏞️ <b>Activity:</b> ${activity}</div>
   `;
 }
 
-function getMood(cond) {
-  if (cond.includes("sun")) return "Main character energy ☀️✨";
-  if (cond.includes("rain")) return "Sad anime rain arc 🌧️";
-  if (cond.includes("cloud")) return "Chill slice-of-life vibes ☁️";
-  return "Mysterious anime day 🌸";
-}
+function setAnimation(condition) {
+  bg.innerHTML = "";
 
-function getOutfit(temp, cond) {
-  if (cond.includes("rain")) return "Oversized hoodie + umbrella ☂️";
-  if (temp > 30) return "Light clothes, stay cool 💫";
-  if (temp < 15) return "Jacket / hoodie recommended 🧥";
-  return "Comfort fit anime drip 😌";
-}
-
-function getActivity(cond) {
-  if (cond.includes("rain")) return "Anime + chai + blanket 🍵";
-  if (cond.includes("sun")) return "Walk like an anime protagonist 🚶‍♀️";
-  return "Music + window vibes 🎧";
+  if (condition.includes("rain")) {
+    for (let i = 0; i < 100; i++) {
+      const drop = document.createElement("div");
+      drop.className = "drop";
+      drop.style.left = Math.random() * 100 + "%";
+      drop.style.animationDuration = 0.5 + Math.random() + "s";
+      bg.appendChild(drop);
+    }
+  } 
+  else if (condition.includes("sun") || condition.includes("clear")) {
+    const sun = document.createElement("div");
+    sun.className = "sun";
+    bg.appendChild(sun);
+  } 
+  else if (condition.includes("snow")) {
+    for (let i = 0; i < 40; i++) {
+      const snow = document.createElement("div");
+      snow.className = "snowflake";
+      snow.innerHTML = "❄️";
+      snow.style.left = Math.random() * 100 + "%";
+      snow.style.animationDuration = 5 + Math.random() * 5 + "s";
+      bg.appendChild(snow);
+    }
+  }
 }
 
 function showError(msg) {
