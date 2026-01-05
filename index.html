@@ -2,45 +2,210 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Weather-it</title>
+<title>Weather-it ✨</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
 :root {
-  --bg: linear-gradient(135deg, #FFD1DC, #FF9AA2);
-  --card: rgba(255,255,255,0.25);
+  --pink: #ffd6e8;
+  --blue: #dbeafe;
+  --card: rgba(255,255,255,0.65);
   --text: #333;
-  font-size: 18px;
 }
-.dark {
-  --bg: linear-gradient(135deg, #141e30, #243b55);
-  --card: rgba(0,0,0,0.4);
-  --text: #fff;
-}
+
 * {
   box-sizing: border-box;
-  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-family: 'Poppins', sans-serif;
 }
+
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg);
+  background: linear-gradient(135deg, #ffd6e8, #dbeafe);
   display: flex;
   justify-content: center;
   align-items: center;
-  color: var(--text);
-  font-family: 'Comic Sans MS', sans-serif;
 }
-.container {
-  width: 98%;
-  max-width: 420px;
+
+/* floating anime clouds */
+body::before {
+  content: "☁️ ☁️ ☁️";
+  position: fixed;
+  top: 10%;
+  left: 0;
+  width: 100%;
+  font-size: 3rem;
+  opacity: 0.25;
+  animation: float 20s linear infinite;
+}
+
+@keyframes float {
+  from { transform: translateX(-20%); }
+  to { transform: translateX(120%); }
+}
+
+.card {
+  width: 90%;
+  max-width: 380px;
   background: var(--card);
-  backdrop-filter: blur(20px);
-  padding: 25px;
-  border-radius: 25px;
+  backdrop-filter: blur(16px);
+  padding: 24px;
+  border-radius: 22px;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.15);
   text-align: center;
-  box-shadow: 0 15px 30px rgba(0,0,0,0.2);
 }
+
+h1 {
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  opacity: 0.7;
+  margin-bottom: 16px;
+}
+
 .search {
-    color:aliceblue
- }etc..etc later
- let retry="{"complete":"Complete itself replacement overrides"}
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+}
+
+button {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  background: #60a5fa;
+  color: white;
+  font-weight: 500;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.weather img {
+  width: 80px;
+}
+
+.mood {
+  margin-top: 10px;
+  font-size: 0.95rem;
+}
+
+.outfit, .activity {
+  margin-top: 8px;
+  font-size: 0.9rem;
+}
+
+.error {
+  color: #e11d48;
+  margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h1>🌸 Weather-it</h1>
+  <div class="subtitle">anime vibes only ✨</div>
+
+  <div class="search">
+    <input id="city" placeholder="Enter city (Tokyo 👀)">
+    <button onclick="search()">🔍</button>
+  </div>
+
+  <div id="output"></div>
+</div>
+
+<script>
+const API_KEY = "b28d989487c24cf7a0c121414260201";
+
+document.getElementById("city").addEventListener("keypress", e => {
+  if (e.key === "Enter") search();
+});
+
+function search() {
+  const city = document.getElementById("city").value.trim();
+  if (!city) return;
+  fetchWeather(city);
+}
+
+function fetchWeather(city) {
+  document.getElementById("output").innerHTML = "⏳ loading anime weather...";
+
+  fetch(`https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${city}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        showError(data.error.message);
+        return;
+      }
+      renderWeather(data);
+    })
+    .catch(() => showError("network senpai betrayed us 💔"));
+}
+
+function renderWeather(data) {
+  const temp = data.current.temp_c;
+  const condition = data.current.condition.text.toLowerCase();
+
+  const mood = getMood(condition);
+  const outfit = getOutfit(temp, condition);
+  const activity = getActivity(condition);
+
+  document.getElementById("output").innerHTML = `
+    <div class="weather">
+      <h2>${data.location.name}</h2>
+      <img src="${data.current.condition.icon}">
+      <p>🌡 ${temp} °C</p>
+      <p>${data.current.condition.text}</p>
+    </div>
+
+    <div class="mood">😄 <b>Mood:</b> ${mood}</div>
+    <div class="outfit">👕 <b>Outfit:</b> ${outfit}</div>
+    <div class="activity">🏞️ <b>Activity:</b> ${activity}</div>
+  `;
+}
+
+function getMood(cond) {
+  if (cond.includes("sun")) return "Main character energy ☀️✨";
+  if (cond.includes("rain")) return "Sad anime rain arc 🌧️";
+  if (cond.includes("cloud")) return "Chill slice-of-life vibes ☁️";
+  return "Mysterious anime day 🌸";
+}
+
+function getOutfit(temp, cond) {
+  if (cond.includes("rain")) return "Oversized hoodie + umbrella ☂️";
+  if (temp > 30) return "Light clothes, stay cool 💫";
+  if (temp < 15) return "Jacket / hoodie recommended 🧥";
+  return "Comfort fit anime drip 😌";
+}
+
+function getActivity(cond) {
+  if (cond.includes("rain")) return "Anime + chai + blanket 🍵";
+  if (cond.includes("sun")) return "Walk like an anime protagonist 🚶‍♀️";
+  return "Music + window vibes 🎧";
+}
+
+function showError(msg) {
+  document.getElementById("output").innerHTML =
+    `<p class="error">❌ ${msg}</p>`;
+}
+</script>
+
+</body>
+</html>
