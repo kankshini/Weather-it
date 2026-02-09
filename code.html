@@ -1,0 +1,276 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Weather-it</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+  --bg: linear-gradient(135deg, #74ebd5, #acb6e5);
+  --card: rgba(255, 255, 255, 0.25);
+  --text: #000;
+}
+
+.dark {
+  --bg: linear-gradient(135deg, #141e30, #243b55);
+  --card: rgba(0, 0, 0, 0.4);
+  --text: #fff;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text);
+  transition: 0.3s;
+}
+
+.container {
+  width: 95%;
+  max-width: 420px;
+  background: var(--card);
+  backdrop-filter: blur(15px);
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+h1 {
+  margin-bottom: 15px;
+}
+
+.search {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  background: #fff;
+  color: #000;
+}
+
+button {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: #4a90e2;
+  color: white;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.action-btn {
+  margin: 5px 0;
+  width: 100%;
+}
+
+.weather img {
+  width: 64px;
+}
+
+.forecast {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  margin-top: 15px;
+}
+
+.day {
+  min-width: 90px;
+  background: rgba(255,255,255,0.3);
+  padding: 8px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.dark .day {
+  background: rgba(0,0,0,0.3);
+}
+
+.night {
+  --bg: linear-gradient(135deg, #0a0e27, #16213e);
+  --card: rgba(0, 0, 0, 0.5);
+  --text: #fff;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes moonGlow {
+  0%, 100% { box-shadow: 0 0 20px #ffeb3b, 0 0 40px #ffeb3b; }
+  50% { box-shadow: 0 0 30px #ffeb3b, 0 0 50px #ffeb3b; }
+}
+
+.star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle 3s infinite;
+}
+
+.moon {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  background: #ffeb3b;
+  border-radius: 50%;
+  top: 20px;
+  right: 20px;
+  animation: moonGlow 4s infinite;
+  box-shadow: 0 0 20px #ffeb3b;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>🌤 Weather-it</h1>
+
+  <div class="search">
+    <input type="text" id="city" placeholder="Enter city name">
+    <button onclick="getWeather()">🔍</button>
+  </div>
+
+  <button class="action-btn" onclick="getLocation()">📍 Use My Location</button>
+  <button class="action-btn" onclick="toggleMode()">🌙 Toggle Dark Mode</button>
+
+  <div class="weather" id="weather"></div>
+  <div class="forecast" id="forecast"></div>
+</div>
+
+<script>
+const API_KEY = "b28d989487c24cf7a0c121414260201";
+
+function toggleMode() {
+  document.body.classList.toggle("dark");
+}
+
+function getWeather(cityParam) {
+  const city = cityParam || document.getElementById("city").value.trim();
+  if (!city) return;
+
+  fetch(`https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${city}&days=7&aqi=yes`)
+    .then(res => res.json())
+    .then(data => showWeather(data))
+    .catch(() => {
+      document.getElementById("weather").innerHTML = "<p>City not found</p>";
+    });
+}
+
+function showWeather(data) {
+  const isNight = data.current.is_day === 0;
+  
+  if (isNight) {
+    document.body.classList.add("night");
+    createNightAnimations();
+  } else {
+    document.body.classList.remove("night");
+    removeNightAnimations();
+  }
+
+  document.getElementById("weather").innerHTML = `
+    <h2>${data.location.name}, ${data.location.country}</h2>
+    <img src="${data.current.condition.icon}">
+    <p>🌡 ${data.current.temp_c} °C</p>
+    <p>${data.current.condition.text}</p>
+    <p>💧 Humidity: ${data.current.humidity}%</p>
+    <p>🌬 Wind: ${data.current.wind_kph} km/h</p>
+  `;
+
+  let forecastHTML = "";
+  data.forecast.forecastday.forEach(day => {
+    forecastHTML += `
+      <div class="day">
+        <p>${day.date}</p>
+        <img src="${day.day.condition.icon}">
+        <p>${day.day.avgtemp_c} °C</p>
+      </div>
+    `;
+  });
+
+  document.getElementById("forecast").innerHTML = forecastHTML;
+}
+
+function createNightAnimations() {
+  const body = document.body;
+  body.innerHTML = '';
+  
+  // Add moon
+  const moon = document.createElement("div");
+  moon.className = "moon";
+  body.appendChild(moon);
+  
+  // Add twinkling stars
+  for (let i = 0; i < 50; i++) {
+    const star = document.createElement("div");
+    star.className = "star";
+    star.style.width = Math.random() * 3 + 1 + "px";
+    star.style.height = star.style.width;
+    star.style.left = Math.random() * 100 + "%";
+    star.style.top = Math.random() * 60 + "%";
+    star.style.animationDelay = Math.random() * 3 + "s";
+    body.appendChild(star);
+  }
+  
+  // Re-add the container
+  const container = document.createElement("div");
+  container.className = "container";
+  container.innerHTML = `
+    <h1>🌤 Weather-it</h1>
+    <div class="search">
+      <input type="text" id="city" placeholder="Enter city name">
+      <button onclick="getWeather()">🔍</button>
+    </div>
+    <button class="action-btn" onclick="getLocation()">📍 Use My Location</button>
+    <button class="action-btn" onclick="toggleMode()">🌙 Toggle Dark Mode</button>
+    <div class="weather" id="weather"></div>
+    <div class="forecast" id="forecast"></div>
+  `;
+  body.appendChild(container);
+}
+
+function removeNightAnimations() {
+  const stars = document.querySelectorAll(".star");
+  const moon = document.querySelector(".moon");
+  stars.forEach(star => star.remove());
+  if (moon) moon.remove();
+}
+
+function getLocation() {
+  navigator.geolocation.getCurrentPosition(pos => {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+
+    fetch(`https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${lat},${lon}&days=7`)
+      .then(res => res.json())
+      .then(data => showWeather(data));
+  });
+}
+</script>
+
+</body>
+</html>
