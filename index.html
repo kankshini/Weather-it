@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Weather-it ✨</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+* {
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(#cfe9f7, #fefefe);
+}
+
+/* 🌌 SCENE LAYER */
+.scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* 🌧️ RAIN */
+.rain-scene {
+  background: linear-gradient(#2b3a55, #1f2933);
+}
+.rain-drop {
+  position: absolute;
+  width: 2px;
+  height: 22px;
+  background: rgba(255,255,255,0.35);
+  animation: rainFall linear infinite;
+}
+@keyframes rainFall {
+  from { transform: translateY(-120px); }
+  to { transform: translateY(110vh); }
+}
+
+/* ☀️ SUN */
+.sunny-scene {
+  background: linear-gradient(#ffecd2, #fcb69f);
+}
+.sun {
+  position: absolute;
+  bottom: -200px;
+  left: 50%;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, #ffd166, #ff9f1c);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  animation: sunRise 4s ease forwards, glow 2s infinite alternate;
+}
+@keyframes sunRise { to { bottom: 45%; } }
+@keyframes glow {
+  from { box-shadow: 0 0 40px #ffd166; }
+  to { box-shadow: 0 0 80px #ffd166; }
+}
+
+/* ☁️ CLOUDS */
+.cloudy-scene {
+  background: linear-gradient(#dbeafe, #f8fafc);
+}
+.cloud {
+  position: absolute;
+  width: 200px;
+  height: 60px;
+  background: rgba(255,255,255,0.8);
+  border-radius: 50px;
+  filter: blur(2px);
+  animation: moveClouds linear infinite;
+}
+.cloud::before,
+.cloud::after {
+  content: "";
+  position: absolute;
+  background: rgba(255,255,255,0.8);
+  width: 80px;
+  height: 80px;
+  top: -40px;
+  border-radius: 50%;
+}
+.cloud::before { left: 20px; }
+.cloud::after { right: 20px; }
+
+@keyframes moveClouds {
+  from { transform: translateX(-30%); }
+  to { transform: translateX(130%); }
+}
+
+/* ❄️ SNOW */
+.snowy-scene {
+  background: linear-gradient(#e0f2fe, #f8fafc);
+}
+.snowflake {
+  position: absolute;
+  font-size: 1.3rem;
+  opacity: 0.85;
+  animation: snowFall linear infinite;
+}
+@keyframes snowFall {
+  from { transform: translateY(-10%); }
+  to { transform: translateY(110vh); }
+}
+
+/* 🧊 UI CARD */
+.card {
+  position: relative;
+  z-index: 2;
+  width: 90%;
+  max-width: 380px;
+  margin: auto;
+  margin-top: 10vh;
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(18px);
+  padding: 24px;
+  border-radius: 24px;
+  text-align: center;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+}
+
+.search {
+  display: flex;
+  gap: 8px;
+}
+input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 14px;
+  border: none;
+  outline: none;
+}
+button {
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  background: #60a5fa;
+  color: white;
+}
+
+.weather img { width: 80px; }
+.error { color: #dc2626; }
+</style>
+</head>
+
+<body>
+
+<div class="scene" id="scene"></div>
+
+<div class="card">
+  <h1>🌸 Weather-it</h1>
+  <p style="opacity:.7">anime weather vibes</p>
+
+  <div class="search">
+    <input id="city" placeholder="Enter city">
+    <button onclick="search()">🔍</button>
+  </div>
+
+  <div id="output"></div>
+</div>
+
+<script>
+const API_KEY = "b28d989487c24cf7a0c121414260201";
+const scene = document.getElementById("scene");
+
+document.getElementById("city").addEventListener("keypress", e => {
+  if (e.key === "Enter") search();
+});
+
+function search() {
+  const city = document.getElementById("city").value.trim();
+  if (!city) return;
+
+  document.getElementById("output").innerHTML = "⏳ loading...";
+  scene.innerHTML = "";
+  scene.className = "scene";
+
+  fetch(`https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${city}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) return showError(data.error.message);
+      renderWeather(data);
+      setScene(data.current.condition.text.toLowerCase());
+    })
+    .catch(() => showError("Network error"));
+}
+
+function renderWeather(data) {
+  document.getElementById("output").innerHTML = `
+    <div class="weather">
+      <h2>${data.location.name}</h2>
+      <img src="${data.current.condition.icon}">
+      <p>🌡 ${data.current.temp_c} °C</p>
+      <p>${data.current.condition.text}</p>
+    </div>
+  `;
+}
+
+function setScene(cond) {
+  if (cond.includes("rain")) {
+    scene.classList.add("rain-scene");
+    for (let i = 0; i < 120; i++) {
+      const d = document.createElement("div");
+      d.className = "rain-drop";
+      d.style.left = Math.random() * 100 + "%";
+      d.style.animationDuration = 0.6 + Math.random() + "s";
+      scene.appendChild(d);
+    }
+  }
+  else if (cond.includes("cloud")) {
+    scene.classList.add("cloudy-scene");
+    for (let i = 0; i < 6; i++) {
+      const c = document.createElement("div");
+      c.className = "cloud";
+      c.style.top = Math.random() * 60 + "%";
+      c.style.animationDuration = 30 + Math.random() * 20 + "s";
+      scene.appendChild(c);
+    }
+  }
+  else if (cond.includes("snow")) {
+    scene.classList.add("snowy-scene");
+    for (let i = 0; i < 40; i++) {
+      const s = document.createElement("div");
+      s.className = "snowflake";
+      s.innerHTML = "❄️";
+      s.style.left = Math.random() * 100 + "%";
+      s.style.animationDuration = 6 + Math.random() * 6 + "s";
+      scene.appendChild(s);
+    }
+  }
+  else {
+    scene.classList.add("sunny-scene");
+    const sun = document.createElement("div");
+    sun.className = "sun";
+    scene.appendChild(sun);
+  }
+}
+
+function showError(msg) {
+  document.getElementById("output").innerHTML =
+    `<p class="error">❌ ${msg}</p>`;
+}
+</script>
+
+</body>
+</html>
