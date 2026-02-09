@@ -125,10 +125,11 @@ button:hover {
 }
 
 .star {
-  position: absolute;
+  position: fixed;
   background: white;
   border-radius: 50%;
   animation: twinkle 3s infinite;
+  pointer-events: none;
 }
 
 .moon {
@@ -230,34 +231,23 @@ function createNightAnimations() {
   body.appendChild(moon);
   
   // Add twinkling stars
-  const starsContainer = document.createElement("div");
-  starsContainer.id = "night-stars";
-  starsContainer.style.position = "fixed";
-  starsContainer.style.top = "0";
-  starsContainer.style.left = "0";
-  starsContainer.style.width = "100%";
-  starsContainer.style.height = "100%";
-  starsContainer.style.pointerEvents = "none";
-  starsContainer.style.zIndex = "-1";
-  
   for (let i = 0; i < 50; i++) {
     const star = document.createElement("div");
     star.className = "star";
+    star.id = "star-" + i;
     star.style.width = Math.random() * 3 + 1 + "px";
     star.style.height = star.style.width;
     star.style.left = Math.random() * 100 + "%";
     star.style.top = Math.random() * 60 + "%";
     star.style.animationDelay = Math.random() * 3 + "s";
-    starsContainer.appendChild(star);
+    body.appendChild(star);
   }
-  
-  body.insertBefore(starsContainer, body.firstChild);
 }
 
 function removeNightAnimations() {
-  const stars = document.getElementById("night-stars");
+  const stars = document.querySelectorAll(".star");
   const moon = document.getElementById("night-moon");
-  if (stars) stars.remove();
+  stars.forEach(star => star.remove());
   if (moon) moon.remove();
 }
 
