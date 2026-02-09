@@ -132,7 +132,7 @@ button:hover {
 }
 
 .moon {
-  position: absolute;
+  position: fixed;
   width: 80px;
   height: 80px;
   background: #ffeb3b;
@@ -141,6 +141,8 @@ button:hover {
   right: 20px;
   animation: moonGlow 4s infinite;
   box-shadow: 0 0 20px #ffeb3b;
+  z-index: 1;
+  pointer-events: none;
 }
 </style>
 </head>
@@ -216,15 +218,28 @@ function showWeather(data) {
 }
 
 function createNightAnimations() {
+  // Remove existing animations first
+  removeNightAnimations();
+  
   const body = document.body;
-  body.innerHTML = '';
   
   // Add moon
   const moon = document.createElement("div");
   moon.className = "moon";
+  moon.id = "night-moon";
   body.appendChild(moon);
   
   // Add twinkling stars
+  const starsContainer = document.createElement("div");
+  starsContainer.id = "night-stars";
+  starsContainer.style.position = "fixed";
+  starsContainer.style.top = "0";
+  starsContainer.style.left = "0";
+  starsContainer.style.width = "100%";
+  starsContainer.style.height = "100%";
+  starsContainer.style.pointerEvents = "none";
+  starsContainer.style.zIndex = "-1";
+  
   for (let i = 0; i < 50; i++) {
     const star = document.createElement("div");
     star.className = "star";
@@ -233,30 +248,16 @@ function createNightAnimations() {
     star.style.left = Math.random() * 100 + "%";
     star.style.top = Math.random() * 60 + "%";
     star.style.animationDelay = Math.random() * 3 + "s";
-    body.appendChild(star);
+    starsContainer.appendChild(star);
   }
   
-  // Re-add the container
-  const container = document.createElement("div");
-  container.className = "container";
-  container.innerHTML = `
-    <h1>🌤 Weather-it</h1>
-    <div class="search">
-      <input type="text" id="city" placeholder="Enter city name">
-      <button onclick="getWeather()">🔍</button>
-    </div>
-    <button class="action-btn" onclick="getLocation()">📍 Use My Location</button>
-    <button class="action-btn" onclick="toggleMode()">🌙 Toggle Dark Mode</button>
-    <div class="weather" id="weather"></div>
-    <div class="forecast" id="forecast"></div>
-  `;
-  body.appendChild(container);
+  body.insertBefore(starsContainer, body.firstChild);
 }
 
 function removeNightAnimations() {
-  const stars = document.querySelectorAll(".star");
-  const moon = document.querySelector(".moon");
-  stars.forEach(star => star.remove());
+  const stars = document.getElementById("night-stars");
+  const moon = document.getElementById("night-moon");
+  if (stars) stars.remove();
   if (moon) moon.remove();
 }
 
