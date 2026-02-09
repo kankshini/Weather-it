@@ -36,6 +36,12 @@ body {
   transition: 0.3s;
 }
 
+body.night {
+  --bg: linear-gradient(135deg, #0a0e27, #16213e);
+  --card: rgba(0, 0, 0, 0.5);
+  --text: #fff;
+}
+
 .container {
   width: 95%;
   max-width: 420px;
@@ -108,10 +114,8 @@ button:hover {
   background: rgba(0,0,0,0.3);
 }
 
-.night {
-  --bg: linear-gradient(135deg, #0a0e27, #16213e);
-  --card: rgba(0, 0, 0, 0.5);
-  --text: #fff;
+.night .day {
+  background: rgba(0,0,0,0.5);
 }
 
 @keyframes twinkle {
